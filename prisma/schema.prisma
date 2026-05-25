@@ -1,0 +1,42 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model Order {
+  id            Int         @id @default(autoincrement())
+  invoice       String      @unique @db.VarChar(100)
+  status        OrderStatus @default(PENDING)
+  totalAmount   Int
+  serviceFee    Int         @default(0)
+  customerName  String      @db.VarChar(150)
+  customerEmail String      @db.VarChar(150)
+  paidAt        DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  items         OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id      Int    @id @default(autoincrement())
+  orderId Int
+  name    String @db.VarChar(200)
+  qty     Int
+  price   Int
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_items")
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FAILED
+  EXPIRED
+}
