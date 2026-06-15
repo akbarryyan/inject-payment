@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { generateInvoice } from '@/lib/invoice';
 
 const SERVICE_FEE = 1000;
 
@@ -31,8 +32,7 @@ export async function POST(request: Request) {
     const subtotal = items.reduce((sum, i) => sum + i.qty * i.price, 0);
     const totalAmount = subtotal + SERVICE_FEE;
 
-    // Generate invoice: INV-{timestamp}-{random 4 digit}
-    const invoice = `INV-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const invoice = await generateInvoice();
 
     const order = await db.order.create({
       data: {
@@ -53,7 +53,8 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json(order, { status: 201 });
-  } catch {
+  } catch (e) {
+    console.error('[orders/create] Error:', e);
     return NextResponse.json({ message: 'Server error.' }, { status: 500 });
   }
 }
